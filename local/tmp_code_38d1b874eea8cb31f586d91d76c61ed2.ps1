@@ -1,0 +1,1 @@
+pip install -qqq https://files.pythonhosted.org/packages/37/55/91e0501daa1aee9ae8d2e1a2f397210f0510a1fa6aa52e972f2b15114eca/fpdf-1.7.2.tar.gz

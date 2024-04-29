@@ -1,0 +1,5 @@
+pyautogen
+markdown2
+xhtml2pdf
+openai
+PyPDF2
