@@ -1,6 +1,6 @@
 
 import os
-from autogen import ConversableAgent
+from autogen import ConversableAgent, UserProxyAgent
 from autogen.coding import LocalCommandLineCodeExecutor
 import tempfile
 
@@ -9,6 +9,10 @@ temp_dir = tempfile.TemporaryDirectory()
 
 # create a local directory to store the code files if it doesn't exist
 local_dir = os.path.join(os.getcwd(), "local")
+
+
+username = "user"
+
 
 ########## CODE WRITER ###############
 
@@ -67,10 +71,10 @@ brett = ConversableAgent(
     human_input_mode="NEVER",  # Never ask for human input.
 )
 
-robert = ConversableAgent(
-    "robert",
-    system_message="""
-    Your name is Robert and you are the Executive Vice President. 
+user_agent = UserProxyAgent(
+    username,
+    system_message=f"""
+    Your name is {username} and you are the user. 
     You are the boss of everyone and you are always in control.
     
     Mitali is a researcher and can ask him to research things for you.

@@ -1,7 +1,7 @@
 
 ############################  TIVALY SEARCH ####################################################
 
-import datetime
+from datetime import datetime
 import requests
 import os
 import openai

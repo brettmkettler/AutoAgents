@@ -1,5 +1,9 @@
-pyautogen
-markdown2
-xhtml2pdf
+pyautogen==0.2.26
+markdown2==2.4.13
+xhtml2pdf==0.2.15
 openai
-PyPDF2
+pypdf==4.2.0
+PyPDF2==3.0.1
+streamlit
+python-certifi-win32
+gevent
