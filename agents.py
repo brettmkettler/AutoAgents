@@ -1,6 +1,6 @@
 
 import os
-from autogen import ConversableAgent, UserProxyAgent
+from autogen import ConversableAgent, UserProxyAgent, AssistantAgent, Cache
 from autogen.coding import LocalCommandLineCodeExecutor
 import tempfile
 
@@ -92,4 +92,23 @@ code_executor_agent = ConversableAgent(
     code_execution_config={"executor": executor},  # Use the local command line code executor.
     human_input_mode="NEVER",  # Always take human input for this agent for safety.
 )
+
+#### PLANNER
+
+# Create planner agent.
+planner = AssistantAgent(
+    name="planner",
+    llm_config={"config_list": [{"model": "gpt-4", "temperature": 0.3, "api_key": os.environ.get("OPENAI_API_KEY")}]},
+    system_message="You are a helpful AI assistant. You suggest a feasible plan "
+    "for finishing a complex task by decomposing it into 3-5 sub-tasks. "
+    "If the plan is not good, suggest a better plan. "
+    "If the execution is wrong, analyze the error and suggest a fix.",
+)
+
+
+
+
+
+
+
 

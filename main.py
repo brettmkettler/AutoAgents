@@ -5,6 +5,11 @@ from datetime import datetime
 import streamlit as st
 from dotenv import load_dotenv
 import gevent
+from typing import Callable, Dict, Literal, Optional, Union
+from typing_extensions import Annotated
+from autogen import Cache
+from autogen.coding import LocalCommandLineCodeExecutor
+
 load_dotenv()
 
 
@@ -27,7 +32,7 @@ load_dotenv()
 
 
 # LOCAL IMPORTS
-from agents import karen, mitali, brett, user_agent, code_executor_agent
+from agents import karen, mitali, brett, user_agent, code_executor_agent, planner
 from tools import research, pdfCreate
 
 
@@ -59,6 +64,29 @@ if not os.path.exists(local_dir):
 files = os.listdir(local_dir)
 
 
+
+
+
+
+def task_planner(question: Annotated[str, "Question to ask the planner."]) -> str:
+    with Cache.disk(cache_seed=4) as cache:
+        user_agent.initiate_chat(planner, message=question, max_turns=1, cache=cache)
+    # return the last message received from the planner
+    return user_agent.last_message()["content"]
+
+
+
+# Setting up code executor.
+os.makedirs("planning", exist_ok=True)
+# Use DockerCommandLineCodeExecutor to run code in a docker container.
+# code_executor = DockerCommandLineCodeExecutor(work_dir="planning")
+code_executor = LocalCommandLineCodeExecutor(work_dir="planning")
+
+
+
+
+
+
 ########## REGISTER TOOLS with AGENTS #############
 
 
@@ -69,6 +97,9 @@ user_agent.register_for_execution(name="research")(research)
 karen.register_for_llm(name="pdfCreate", description="A pdf creator tool that accepts a string for an input.")(pdfCreate)
 user_agent.register_for_execution(name="pdfCreate")(pdfCreate)
 
+planner.register_for_llm(name="task_planner", description="A task planner than can help you with decomposing a complex task into sub-tasks.")(task_planner)
+user_agent.register_for_execution(name="task_planner")(task_planner)
+
 
 
 ################## GROUP CHAT #############################
@@ -76,7 +107,8 @@ user_agent.register_for_execution(name="pdfCreate")(pdfCreate)
 
 # Allows the agents constraints to only talk to certain agents.
 allowed_transitions = {
-    user_agent: [brett, mitali, karen],
+    user_agent: [planner],
+    planner: [brett, mitali, karen, user_agent],
     mitali: [user_agent],
     brett: [user_agent, code_executor_agent],
     karen: [user_agent], 
@@ -90,7 +122,11 @@ allowed_transitions = {
 
 st.write("""# Auto Agents""")
 
+st.write(""" A conversational AI platform that allows you to interact with multiple agents to create and execute code.""")
 
+st.write("""## Example Use Cases""")
+st.write("""1. Write a python code to display the stock price of Capgemini.""")
+st.write("""2. Create a python code to display the weather of Paris.""")
 
 class TrackableUserProxyAgent(UserProxyAgent):
     def _process_received_message(self, message, sender, silent):
@@ -111,11 +147,16 @@ selected_model = None
 
 
 
+
 with st.sidebar:
     st.header("Configuration")
+    st.write("Must use GPT4 model for now.")
     user_name = st.text_input("User Name", "User")
     selected_model = st.selectbox("Model", ['gpt-3.5-turbo', 'gpt-4'], index=1)
-    selected_key = "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"
+    
+    #selected_key = st.text_input("OpenAI API Key", "KeyGoesHere")
+    
+    selected_key = "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"
 
 
 
@@ -147,7 +188,7 @@ with st.container():
 
         
         group_chat_with_introductions = GroupChat(
-            agents=[karen, mitali, user_agent, brett, code_executor_agent],
+            agents=[planner, karen, mitali, user_agent, brett, code_executor_agent],
             allow_repeat_speaker=False,
             speaker_transitions_type="allowed",
             messages=[],
@@ -156,6 +197,11 @@ with st.container():
         )
         
         group_chat_manager = TrackableGroupChatManager(
+            system_message=""""You can use the task planner to decompose a complex task into sub-tasks. "
+            Make sure your follow through the sub-tasks. 
+            When needed, write Python code in markdown blocks, and I will execute them.
+            Give the user a final solution at the end.
+            Return TERMINATE only if the sub-tasks are completed.""",
             groupchat=group_chat_with_introductions,
             llm_config={"config_list": [{"model": "gpt-4", "api_key": os.environ["OPENAI_API_KEY"]}]},
         )
