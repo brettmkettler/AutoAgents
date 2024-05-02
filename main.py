@@ -156,7 +156,7 @@ with st.sidebar:
     
     #selected_key = st.text_input("OpenAI API Key", "KeyGoesHere")
     
-    selected_key = "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"
+    selected_key = os.environ["OPENAI_API_KEY"]
 
 
 
