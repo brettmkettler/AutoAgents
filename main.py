@@ -97,8 +97,8 @@ user_agent.register_for_execution(name="research")(research)
 karen.register_for_llm(name="pdfCreate", description="A pdf creator tool that accepts a string for an input.")(pdfCreate)
 user_agent.register_for_execution(name="pdfCreate")(pdfCreate)
 
-planner.register_for_llm(name="task_planner", description="A task planner than can help you with decomposing a complex task into sub-tasks.")(task_planner)
-user_agent.register_for_execution(name="task_planner")(task_planner)
+# planner.register_for_llm(name="task_planner", description="A task planner than can help you with decomposing a complex task into sub-tasks.")(task_planner)
+# user_agent.register_for_execution(name="task_planner")(task_planner)
 
 
 
@@ -107,8 +107,7 @@ user_agent.register_for_execution(name="task_planner")(task_planner)
 
 # Allows the agents constraints to only talk to certain agents.
 allowed_transitions = {
-    user_agent: [planner],
-    planner: [brett, mitali, karen, user_agent],
+    user_agent: [brett, mitali, karen, user_agent],
     mitali: [user_agent],
     brett: [user_agent, code_executor_agent],
     karen: [user_agent], 
@@ -189,7 +188,7 @@ with st.container():
         
         group_chat_with_introductions = GroupChat(
             agents=[planner, karen, mitali, user_agent, brett, code_executor_agent],
-            allow_repeat_speaker=False,
+            allowed_or_disallowed_speaker_transitions=allowed_transitions,
             speaker_transitions_type="allowed",
             messages=[],
             max_round=20,

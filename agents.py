@@ -77,11 +77,35 @@ user_agent = UserProxyAgent(
     Your name is {username} and you are the user. 
     You are the boss of everyone and you are always in control.
     
+    You need to use the planner to plan tasks and then ask the team to execute the tasks.
+    
+    Your Team:
     Mitali is a researcher and can ask him to research things for you.
     Brett is the scripter and developer and can ask him to create scripts for you.
     Karen is the report generator and can ask her to create reports for you.
     """,
-    llm_config={"config_list": [{"model": "gpt-4", "temperature": 0.3, "api_key": os.environ.get("OPENAI_API_KEY")}]},
+    llm_config={"config_list": [{
+        "model": "gpt-4", 
+        "temperature": 0.3, 
+        "api_key": os.environ.get("OPENAI_API_KEY"),
+        "functions": [
+            {
+                "name": "ask_planner",
+                "description": "ask planner to: 1. get a plan for finishing a task, 2. verify the execution result of the plan and potentially suggest new plan.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "message": {
+                            "type": "string",
+                            "description": "question to ask planner. Make sure the question include enough context, such as the code and the execution result. The planner does not know the conversation between you and the user, unless you share the conversation with the planner.",
+                        },
+                    },
+                    "required": ["message"],
+                },
+            },
+        ],
+        
+        }]},
     human_input_mode="NEVER",  # Never ask for human input.
 )
 
@@ -99,10 +123,10 @@ code_executor_agent = ConversableAgent(
 planner = AssistantAgent(
     name="planner",
     llm_config={"config_list": [{"model": "gpt-4", "temperature": 0.3, "api_key": os.environ.get("OPENAI_API_KEY")}]},
-    system_message="You are a helpful AI assistant. You suggest a feasible plan "
-    "for finishing a complex task by decomposing it into 3-5 sub-tasks. "
-    "If the plan is not good, suggest a better plan. "
-    "If the execution is wrong, analyze the error and suggest a fix.",
+    system_message="""You are a helpful AI assistant. You suggest a feasible plan 
+    for finishing a complex task by decomposing it into 3-5 sub-tasks. 
+    If the plan is not good, suggest a better plan. 
+    If the execution is wrong, analyze the error and suggest a fix.""",
 )
 
 
